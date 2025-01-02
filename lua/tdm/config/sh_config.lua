@@ -3,34 +3,34 @@ TDM.Config = {
     MinimumPlayers = 2,
     WaitingTime = 30,
     SpawnFreezeTime = 5,
-    gameTimeInMinutes = 6,
+    GameTimeInMinutes = 6,
     Teams = {
         [1] = {
             name = "Red Team",
             color = Color(255, 0, 0),
             model = "models/player/combine_soldier.mdl",
-            weapons = {"weapon_pistol"},
+            weapons = {"m9k_ak47"},
             ammo = {
-                weapon_pistol = 36
+                m9k_ak47 = 100
             },
-            spawns = { -- exemple
-                Vector(-856, 1424, -119),
-                Vector(-742, 1356, -119),
-                Vector(-632, 1289, -119)
+            spawns = {
+                Vector(700, -908, 0),
+                Vector(653, -723, 0),
+                Vector(746, -622, 0)
             } -- three required
         },
         [2] = {
             name = "Blue Team",
             color = Color(0, 0, 255),
             model = "models/player/police.mdl",
-            weapons = {"weapon_smg1"},
+            weapons = {"tfa_mossberg590"},
             ammo = {
-                weapon_smg1 = 90
+                tfa_mossberg590 = 140
             },
-            spawns = { -- exemple
-                Vector(-856, 1424, -119),
-                Vector(-742, 1356, -119),
-                Vector(-632, 1289, -119),
+            spawns = {
+                Vector(-785, 1067, 0),
+                Vector(-79, 886, 0),
+                Vector(-762, 756, 0),
             } -- three required
         }
     }
