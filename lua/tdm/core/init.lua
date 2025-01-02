@@ -3,12 +3,15 @@ TDM.SpawnPoints = {}
 TDM.GameActive = false
 TDM.RoundTimer = 0
 TDM.FreezeTime = false
+TDM.MinutesElapsed = 0
+TDM.UsedSpawns = {}
 
 -- Network strings
 util.AddNetworkString("TDM_CountdownStart")
 util.AddNetworkString("TDM_CountdownUpdate")
 util.AddNetworkString("TDM_RoundStart")
 util.AddNetworkString("TDM_RoundEnd")
+util.AddNetworkString("TDM_RemainingTime")
 
 -- Initialize spawn points
 hook.Add("InitPostEntity", "TDM_InitSpawnPoints", function()
@@ -51,14 +54,14 @@ hook.Add("PlayerSpawnRagdoll", "TDM_DisableRagdolls", function(ply)
     return false
 end)
 
--- Physigun
-
+-- Disable physigun
 hook.Add("PlayerGiveSWEP", "TDM_DisablePhysgun", function(ply, weapon)
     if weapon == "weapon_physgun" then
         return false
     end
 end)
 
+-- Not essential
 hook.Add("PlayerLoadout", "TDM_RemovePhysgun", function(ply)
     ply:StripWeapon("weapon_physgun")
     return true
@@ -74,6 +77,16 @@ hook.Add("PlayerInitialSpawn", "TDM_PlayerInitialSpawn", function(ply)
     else
         ply:SetTeam(2)
     end
+
+    local playerTeam = ply:Team()
+    
+    if TDM.GameActive then
+        local spawnPoint = TDM:FindBestSpawn(playerTeam)
+        if spawnPoint then
+            ply:SetPos(spawnPoint:GetPos())
+            ply:SetAngles(spawnPoint:GetAngles())
+        end
+    end
     
     ply:SetNWInt("Kills", 0)
     ply:SetNWInt("Deaths", 0)
@@ -81,20 +94,91 @@ hook.Add("PlayerInitialSpawn", "TDM_PlayerInitialSpawn", function(ply)
     TDM:CheckGameStart()
 end)
 
+timer.Create("TDM_CleanSpawns", 30, 0, function()
+    local currentTime = CurTime()
+    for spawn, time in pairs(TDM.UsedSpawns) do
+        if currentTime - time > 5 then
+            TDM.UsedSpawns[spawn] = nil
+        end
+    end
+end)
+
 -- Player spawn
 hook.Add("PlayerSpawn", "TDM_PlayerSpawn", function(ply)
+
     if ply:Team() == 1 then
         ply:SetModel(TDM.Config.Teams[1].model)
     else
         ply:SetModel(TDM.Config.Teams[2].model)
     end
-    
+
     TDM:GivePlayerLoadout(ply)
     
     if TDM.FreezeTime then
         ply:Lock()
     end
+
+    if not TDM.GameActive then return end
+    
+    local playerTeam = ply:Team()
+    local spawnPoint = TDM:FindBestSpawn(playerTeam)
+    if spawnPoint then
+        ply:SetPos(spawnPoint:GetPos())
+        ply:SetAngles(spawnPoint:GetAngles())
+    end
 end)
+
+function TDM:FindBestSpawn(team)
+    local spawnPoints = TDM.Config.Teams[team].spawns
+    if not spawnPoints or #spawnPoints == 0 then return nil end
+    
+    if table.Count(TDM.UsedSpawns) >= #spawnPoints then
+        TDM.UsedSpawns = {}
+    end
+    
+    local bestSpawn = nil
+    local maxDistance = 0
+    
+    for _, spawn in ipairs(spawnPoints) do
+        if TDM.UsedSpawns[spawn] then continue end
+        
+        local minDistToPlayer = math.huge
+        
+        for _, player in ipairs(player.GetAll()) do
+            if player:IsValid() and player:Alive() then
+                local dist = spawn:Distance(player:GetPos())
+                minDistToPlayer = math.min(minDistToPlayer, dist)
+            end
+        end
+        
+        if minDistToPlayer > maxDistance then
+            maxDistance = minDistToPlayer
+            bestSpawn = spawn
+        end
+    end
+    
+    if not bestSpawn then
+        local availableSpawns = {}
+        for _, spawn in ipairs(spawnPoints) do
+            if not TDM.UsedSpawns[spawn] then
+                table.insert(availableSpawns, spawn)
+            end
+        end
+        
+        if #availableSpawns > 0 then
+            bestSpawn = availableSpawns[math.random(#availableSpawns)]
+        else
+            bestSpawn = spawnPoints[math.random(#spawnPoints)]
+            TDM.UsedSpawns = {}
+        end
+    end
+    
+    if bestSpawn then
+        TDM.UsedSpawns[bestSpawn] = CurTime()
+    end
+    
+    return bestSpawn
+end
 
 function TDM:GivePlayerLoadout(ply)
     ply:StripWeapons()
@@ -145,9 +229,20 @@ function TDM:StartRound()
     for _, ply in pairs(player.GetAll()) do
         ply:UnLock()
     end
+
+    timer.Create("TDM_EndGameTimer", TDM.gameTimeInMinutes * 60, 1, function()
+       TDM:EndRound() 
+    end)
     
     net.Start("TDM_RoundStart")
     net.Broadcast()
+
+    timer.Create("TDM_BroadCastTime", 60, TDM.gameTimeInMinutes, function()
+        TDM.MinutesElapsed = TDM.MinutesElapsed + 1
+        net.Start("TDM_RemainingTime")
+        net.WriteInt(TDM.MinutesElapsed, 8)
+        net.Broadcast()
+    end)
 end
 
 hook.Add("PlayerDeath", "TDM_PlayerDeath", function(victim, inflictor, attacker)
@@ -181,6 +276,7 @@ end
 
 function TDM:EndRound()
     TDM.GameActive = false
+    TDM.MinutesElapsed = 0
     
     net.Start("TDM_RoundEnd")
     net.Broadcast()

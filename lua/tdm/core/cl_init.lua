@@ -1,6 +1,8 @@
 TDM = TDM or {}
 local countdown = 0
 local roundActive = false
+local remainingTime = 0
+local showRemainingTime = 0 -- Nouvelle variable pour suivre l'affichage
 
 -- Receive countdown start
 net.Receive("TDM_CountdownStart", function()
@@ -23,6 +25,12 @@ end)
 net.Receive("TDM_RoundEnd", function()
     roundActive = false
     surface.PlaySound("ambient/alarms/citadel_alert_loop2.wav")
+end)
+
+-- Receive remaining time
+net.Receive('TDM_RemainingTime', function()
+    remainingTime = net.ReadInt(8)
+    showRemainingTime = CurTime() + 10
 end)
 
 -- Draw HUD
@@ -61,10 +69,22 @@ hook.Add("HUDPaint", "TDM_HUDPaint", function()
         TEXT_ALIGN_LEFT,
         TEXT_ALIGN_TOP
     )
+
+    -- Display remaining time in minutes
+    if showRemainingTime > CurTime() then
+        draw.SimpleText(
+            "Time Remaining: " .. remainingTime + " Mins",
+            "DermaLarge",
+            ScrW() / 2,
+            ScrH() / 3,
+            Color(255, 255, 255, 255),
+            TEXT_ALIGN_CENTER,
+            TEXT_ALIGN_CENTER
+        )
+    end
 end)
 
 -- Prevent weapons spawn
-
 hook.Add("SpawnMenuOpen", "TDM_DisableSpawnMenu", function()
     return false
 end)
