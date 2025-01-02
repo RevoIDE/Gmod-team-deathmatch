@@ -49,21 +49,22 @@ net.Receive('TDM_RemainingTime', function()
     showRemainingTime = CurTime() + 10
 end)
 
+surface.CreateFont("TDM_Large", {
+    font = "Roboto",
+    size = 48,
+    weight = 500,
+    antialias = true,
+})
+
+surface.CreateFont("TDM_Medium", {
+    font = "Roboto",
+    size = 32,
+    weight = 500,
+    antialias = true,
+})
+
 -- Draw HUD
 hook.Add("HUDPaint", "TDM_HUDPaint", function()
-    surface.CreateFont("TDM_Large", {
-        font = "Roboto",
-        size = 48,
-        weight = 500,
-        antialias = true,
-    })
-    
-    surface.CreateFont("TDM_Medium", {
-        font = "Roboto",
-        size = 32,
-        weight = 500,
-        antialias = true,
-    })
 
     if playerTeamNotification > CurTime() then
         local teamColor = LocalPlayer():Team() == 1 and Color(255, 75, 75, 200) or Color(75, 75, 255, 200)

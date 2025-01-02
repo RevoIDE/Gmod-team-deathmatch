@@ -105,34 +105,34 @@ function TDM:TeleportAndEquipPlayer(ply)
     self:GivePlayerLoadout(ply)
 end
 
--- local nextAmmoCheck = {}
--- hook.Add("Think", "TDM_AmmoInfinite", function()
---     local curTime = CurTime()
+local nextAmmoCheck = {}
+hook.Add("Think", "TDM_AmmoInfinite", function()
+    local curTime = CurTime()
     
---     for _, ply in ipairs(player.GetAll()) do
---         if not IsValid(ply) or not ply:Alive() then continue end
+    for _, ply in ipairs(player.GetAll()) do
+        if not IsValid(ply) or not ply:Alive() then continue end
         
---         if not nextAmmoCheck[ply] or curTime >= nextAmmoCheck[ply] then
---             nextAmmoCheck[ply] = curTime + 0.5
+        if not nextAmmoCheck[ply] or curTime >= nextAmmoCheck[ply] then
+            nextAmmoCheck[ply] = curTime + 0.5
             
---             for _, weapon in ipairs(ply:GetWeapons()) do
---                 if not IsValid(weapon) then continue end
---                 local maxClip = weapon:GetMaxClip1()
---                 if maxClip > 0 then
---                     weapon:SetClip1(maxClip)
---                 end
---             end
---         end
---     end
--- end)
+            for _, weapon in ipairs(ply:GetWeapons()) do
+                if not IsValid(weapon) then continue end
+                local maxClip = weapon:GetMaxClip1()
+                if maxClip > 0 then
+                    weapon:SetClip1(maxClip)
+                end
+            end
+        end
+    end
+end)
 
--- -- Clean up ammo check table when player disconnects
--- hook.Add("PlayerDisconnected", "TDM_CleanAmmoCheck", function(ply)
---     nextAmmoCheck[ply] = nil
---     if TDM.GameActive then
---         TDM:CheckRoundEnd()
---     end
--- end)
+-- Clean up ammo check table when player disconnects
+hook.Add("PlayerDisconnected", "TDM_CleanAmmoCheck", function(ply)
+    nextAmmoCheck[ply] = nil
+    if TDM.GameActive then
+        TDM:CheckRoundEnd()
+    end
+end)
 
 -- Player spawn
 hook.Add("PlayerSpawn", "TDM_PlayerSpawn", function(ply)
