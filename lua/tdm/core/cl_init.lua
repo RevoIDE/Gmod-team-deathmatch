@@ -63,13 +63,26 @@ surface.CreateFont("TDM_Medium", {
     antialias = true,
 })
 
+surface.CreateFont("TDM_Info", {
+    font = "Lato",
+    size = 28,
+    weight = 400,
+    antialias = true,
+})
+
+local function DrawFlatBox(x, y, w, h, bgColor, borderColor)
+    draw.RoundedBox(0, x, y, w, h, borderColor)
+    draw.RoundedBox(0, x + 2, y + 2, w - 4, h - 4, bgColor)
+end
+
 -- Draw HUD
 hook.Add("HUDPaint", "TDM_HUDPaint", function()
+    local ply = LocalPlayer()
 
     if playerTeamNotification > CurTime() then
-        local teamColor = LocalPlayer():Team() == 1 and Color(255, 75, 75, 200) or Color(75, 75, 255, 200)
-        local teamName = LocalPlayer():Team() == 1 and "RED TEAM" or "BLUE TEAM"
-        
+        local teamColor = ply:Team() == 1 and Color(255, 75, 75, 200) or Color(75, 75, 255, 200)
+        local teamName = ply:Team() == 1 and "RED TEAM" or "BLUE TEAM"
+
         draw.RoundedBox(8, ScrW()/2 - 200, 100, 400, 80, Color(0, 0, 0, 150))
         draw.RoundedBox(8, ScrW()/2 - 198, 102, 396, 76, teamColor)
         draw.SimpleText(
@@ -95,7 +108,7 @@ hook.Add("HUDPaint", "TDM_HUDPaint", function()
     if winningTeam and showWinningTeam > CurTime() then
         local teamColor = winningTeam == 1 and Color(255, 75, 75, 200) or Color(75, 75, 255, 200)
         local teamName = winningTeam == 1 and "THE RED TEAM" or "THE BLUE TEAM"
-        
+
         draw.RoundedBox(8, ScrW()/2 - 250, ScrH()/2 - 60, 500, 120, Color(0, 0, 0, 150))
         draw.RoundedBox(8, ScrW()/2 - 248, ScrH()/2 - 58, 496, 116, teamColor)
         draw.SimpleText(
@@ -121,7 +134,7 @@ hook.Add("HUDPaint", "TDM_HUDPaint", function()
     local padding = 20
     local scoreHeight = 40
     local scoreWidth = 200
-    
+
     draw.RoundedBox(8, padding, padding, scoreWidth, scoreHeight, Color(0, 0, 0, 150))
     draw.RoundedBox(8, padding + 2, padding + 2, scoreWidth - 4, scoreHeight - 4, Color(255, 75, 75, 200))
     draw.SimpleText(
@@ -133,7 +146,7 @@ hook.Add("HUDPaint", "TDM_HUDPaint", function()
         TEXT_ALIGN_CENTER,
         TEXT_ALIGN_CENTER
     )
-    
+
     draw.RoundedBox(8, padding, padding + scoreHeight + 10, scoreWidth, scoreHeight, Color(0, 0, 0, 150))
     draw.RoundedBox(8, padding + 2, padding + scoreHeight + 12, scoreWidth - 4, scoreHeight - 4, Color(75, 75, 255, 200))
     draw.SimpleText(
@@ -179,6 +192,28 @@ hook.Add("HUDPaint", "TDM_HUDPaint", function()
             TEXT_ALIGN_CENTER
         )
     end
+
+    -- Health and Ammo
+    local health = ply:Health()
+    local weapon = ply:GetActiveWeapon()
+    local ammoText = ""
+    if IsValid(weapon) then
+        local ammoInClip = weapon:Clip1()
+        local ammoType = weapon:GetPrimaryAmmoType()
+        local reserveAmmo = ply:GetAmmoCount(ammoType)
+        ammoText = "Ammo: " .. ammoInClip .. " / " .. reserveAmmo
+    end
+
+    -- Health Bar
+    local healthWidth = math.Clamp(health, 0, 100) * 3
+    DrawFlatBox(10, ScrH() - 70, 300, 30, Color(20, 20, 20), Color(255, 75, 75))
+    draw.RoundedBox(0, 10, ScrH() - 70, healthWidth, 30, Color(255, 75, 75))
+
+    -- Ammo Display
+    draw.SimpleText(ammoText, "TDM_Info", 10, ScrH() - 110, Color(255, 255, 255), TEXT_ALIGN_LEFT)
+    if ply:Team() == 1 or ply:Team() == 2 then
+        draw.SimpleText("Team: " .. TDM.Config.Teams[ply:Team()].name, "TDM_Info", 10, ScrH() - 130, Color(255, 255, 255), TEXT_ALIGN_LEFT)
+    end
 end)
 
 hook.Add("SpawnMenuOpen", "TDM_DisableSpawnMenu", function()
@@ -192,7 +227,9 @@ end)
 hook.Add("HUDShouldDraw", "TDM_HUDShouldDraw", function(name)
     local hide = {
         ["CHudHealth"] = true,
-        ["CHudBattery"] = true
+        ["CHudBattery"] = true,
+        ["CHudAmmo"] = true,
+        ["CHudSecondaryAmmo"] = true
     }
     if hide[name] then return false end
 end)

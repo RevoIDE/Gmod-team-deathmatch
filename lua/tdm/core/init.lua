@@ -117,14 +117,16 @@ hook.Add("Think", "TDM_AmmoInfinite", function()
             
             for _, weapon in ipairs(ply:GetWeapons()) do
                 if not IsValid(weapon) then continue end
-                local maxClip = weapon:GetMaxClip1()
-                if maxClip > 0 then
-                    weapon:SetClip1(maxClip)
+                
+                local ammoType = weapon:GetPrimaryAmmoType()
+                if ammoType > -1 then
+                    ply:SetAmmo(99, ammoType)
                 end
             end
         end
     end
 end)
+
 
 -- Clean up ammo check table when player disconnects
 hook.Add("PlayerDisconnected", "TDM_CleanAmmoCheck", function(ply)
