@@ -260,17 +260,16 @@ function TDM:GivePlayerLoadout(ply)
     ply:StripWeapons()
     ply:StripAmmo()
 
-    if not teamData.weapons then
+    if not teamData.weapons or #teamData.weapons == 0 then
         print("[TDM] Erreur: Pas d'armes définies pour l'équipe " .. team)
         return
     end
-    
-    for _, weapon in ipairs(teamData.weapons) do
-        if not weapon then continue end
-        ply:Give(weapon)
-        if teamData.ammo and teamData.ammo[weapon] then
-            ply:GiveAmmo(teamData.ammo[weapon], game.GetAmmoID(weapon) or weapon, true)
-        end
+
+    local randomWeapon = teamData.weapons[math.random(#teamData.weapons)]
+    ply:Give(randomWeapon)
+
+    if teamData.ammo and teamData.ammo[randomWeapon] then
+        ply:GiveAmmo(teamData.ammo[randomWeapon], game.GetAmmoID(randomWeapon) or randomWeapon, true)
     end
 end
 

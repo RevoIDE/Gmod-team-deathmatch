@@ -9,7 +9,7 @@ TDM.Config = {
             name = "Red Team",
             color = Color(255, 0, 0),
             model = "models/player/breen.mdl",
-            weapons = {"m9k_ak47"},
+            weapons = {"m9k_model3russian", "m9k_ump45", "csgo_karambit_crimsonwebs", "m9k_model500", "m9k_winchester73"},
             ammo = {
                 m9k_ak47 = 100
             },
@@ -23,7 +23,7 @@ TDM.Config = {
             name = "Blue Team",
             color = Color(0, 0, 255),
             model = "models/player/kleiner.mdl",
-            weapons = {"m9k_mossberg590"},
+            weapons = {"m9k_model3russian", "m9k_ump45", "csgo_karambit_crimsonwebs", "m9k_model500", "m9k_winchester73"},
             ammo = {
                 tfa_mossberg590 = 140
             },
