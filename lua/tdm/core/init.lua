@@ -15,6 +15,30 @@ util.AddNetworkString("TDM_RoundEnd")
 util.AddNetworkString("TDM_RemainingTime")
 util.AddNetworkString("TDM_PlayerTeam")
 util.AddNetworkString("TDM_WinningTeam")
+util.AddNetworkString("TDM_TeamSelect")
+util.AddNetworkString("TDM_PlayerTeam")
+util.AddNetworkString("TDM_PlayerTeamMenu")
+
+net.Receive("TDM_TeamSelect", function(len, ply)
+    local teamChoice = net.ReadString()
+    
+    if not IsValid(ply) then return end
+    
+    local teamID = teamChoice == "red" and 1 or 2
+    
+    if team.NumPlayers(teamID) >= 4 then
+        ply:ChatPrint("Cette équipe est pleine !")
+        return
+    end
+    
+    ply:SetTeam(teamID)
+    
+    net.Start("TDM_PlayerTeam")
+    net.WriteInt(teamID, 8)
+    net.Send(ply)
+    
+    ply:Spawn()
+end)
 
 local function DisableSpawning() return false end
 hook.Add("PlayerSpawnObject", "TDM_DisableSpawning", DisableSpawning)
@@ -158,10 +182,11 @@ hook.Add("PlayerSpawn", "TDM_PlayerSpawn", function(ply)
 end)
 
 function TDM:AssignTeamToPlayers()
+
     for _, ply in ipairs(player.GetAll()) do
-        if ply:IsValid() then
+        if ply:IsValid() and ply:Team() ~= 1 and ply:Team() ~= 2 then
             if not TDM.Config.Teams[1] or not TDM.Config.Teams[2] then
-                print("[TDM] Erreur de configuration des équipes.")
+                print("[TDM] Team conf error.")
                 return
             end
         
@@ -178,7 +203,7 @@ function TDM:AssignTeamToPlayers()
             end
             
             ply:SetTeam(assignedTeam)
-            print("[TDM] " .. ply:Nick() .. " assigné à l'équipe " .. assignedTeam)
+            print("[TDM] " .. ply:Nick() .. " in " .. assignedTeam)
         end
     end
 end
@@ -235,25 +260,24 @@ end
 
 function TDM:GivePlayerLoadout(ply)
     if not IsValid(ply) then 
-        print("[TDM] Erreur: Joueur invalide dans GivePlayerLoadout")
         return 
     end
     
     local team = ply:Team()
     if team ~= 1 and team ~= 2 then
-        print("[TDM] Erreur: Équipe invalide (" .. team .. ") pour " .. ply:Nick())
+        print("[TDM] Error: invalid team (" .. team .. ") for " .. ply:Nick())
         ply:SetTeam(1)
         team = 1
     end
     
     if not TDM.Config then
-        print("[TDM] Erreur: Configuration non chargée")
+        print("[TDM] Error: Configuration not loaded")
         return
     end
     
     local teamData = TDM.Config.Teams[team]
     if not teamData then
-        print("[TDM] Erreur: Configuration manquante pour l'équipe " .. team)
+        print("[TDM] Error: Missing configuration for " .. team)
         return
     end
     
@@ -261,7 +285,7 @@ function TDM:GivePlayerLoadout(ply)
     ply:StripAmmo()
 
     if not teamData.weapons or #teamData.weapons == 0 then
-        print("[TDM] Erreur: Pas d'armes définies pour l'équipe " .. team)
+        print("[TDM] Error: no weapon for " .. team)
         return
     end
 
@@ -271,6 +295,8 @@ function TDM:GivePlayerLoadout(ply)
     if teamData.ammo and teamData.ammo[randomWeapon] then
         ply:GiveAmmo(teamData.ammo[randomWeapon], game.GetAmmoID(randomWeapon) or randomWeapon, true)
     end
+
+    ply:SetHealth(ply:GetMaxHealth())
 end
 
 function TDM:CheckGameStart()
@@ -290,6 +316,9 @@ function TDM:StartWaitingPeriod()
     
     net.Start("TDM_CountdownStart")
     net.WriteInt(TDM.RoundTimer, 8)
+    net.Broadcast()
+
+    net.Start("TDM_PlayerTeamMenu")
     net.Broadcast()
     
     self:CreateSafeTimer("TDM_WaitingPeriodTimer", 1, TDM.Config.WaitingTime, function()

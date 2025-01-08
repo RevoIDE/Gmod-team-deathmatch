@@ -233,3 +233,114 @@ hook.Add("HUDShouldDraw", "TDM_HUDShouldDraw", function(name)
     }
     if hide[name] then return false end
 end)
+
+local TeamSelectionMenu = nil
+
+function CreateTeamMenu()
+    if IsValid(TeamSelectionMenu) then
+        TeamSelectionMenu:Remove()
+    end
+
+    TeamSelectionMenu = vgui.Create("DPanel")
+    TeamSelectionMenu:SetSize(ScrW(), ScrH())
+    TeamSelectionMenu:SetPos(0, 0)
+    TeamSelectionMenu:MakePopup()
+
+    TeamSelectionMenu:SetAlpha(0)
+    TeamSelectionMenu:AlphaTo(255, 0.3, 0)
+
+    TeamSelectionMenu.Paint = function(self, w, h)
+        DrawBlur(self, 4)
+        draw.RoundedBox(0, 0, 0, w, h, Color(0, 0, 0, 180))
+        draw.SimpleText("TEAM SELECTION", "DermaLarge", w/2, h * 0.2, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+    end
+
+    local closeButton = vgui.Create("DButton", TeamSelectionMenu)
+    closeButton:SetSize(40, 40)
+    closeButton:SetPos(TeamSelectionMenu:GetWide() - 60, 20)
+    closeButton:SetText("✕")
+    closeButton:SetFont("DermaLarge")
+    closeButton.Paint = function(self, w, h)
+        if self:IsHovered() then
+            draw.RoundedBox(4, 0, 0, w, h, Color(255, 255, 255, 10))
+        end
+    end
+    closeButton.DoClick = function()
+        TeamSelectionMenu:AlphaTo(0, 0.3, 0, function()
+            TeamSelectionMenu:Remove()
+        end)
+    end
+
+    local teamContainer = vgui.Create("DPanel", TeamSelectionMenu)
+    local containerW = math.min(ScrW() * 0.8, 1200)
+    local containerH = ScrH() * 0.5
+    teamContainer:SetSize(containerW, containerH)
+    teamContainer:Center()
+    teamContainer.Paint = function() end
+
+    local blueTeam = vgui.Create("DButton", teamContainer)
+    blueTeam:SetSize(containerW * 0.45, containerH)
+    blueTeam:SetPos(0, 0)
+    blueTeam:SetText("")
+    
+    local blueHover = 0
+    blueTeam.Paint = function(self, w, h)
+        blueHover = Lerp(FrameTime() * 10, blueHover, self:IsHovered() and 1 or 0)
+        
+        draw.RoundedBox(12, 0, 0, w, h, Color(0, 0, 0, 150))
+        draw.RoundedBox(12, 0, 0, w, h, Color(50, 100, 255, 30 + blueHover * 40))
+        
+        surface.SetDrawColor(50, 100, 255, 100 + blueHover * 155)
+        surface.DrawOutlinedRect(0, 0, w, h, 3)
+        
+        draw.SimpleText("ÉQUIPE BLEUE", "DermaLarge", w/2, h/2, Color(255, 255, 255, 200 + blueHover * 55), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+
+    local redTeam = vgui.Create("DButton", teamContainer)
+    redTeam:SetSize(containerW * 0.45, containerH)
+    redTeam:SetPos(containerW * 0.55, 0)
+    redTeam:SetText("")
+    
+    local redHover = 0
+    redTeam.Paint = function(self, w, h)
+        redHover = Lerp(FrameTime() * 10, redHover, self:IsHovered() and 1 or 0)
+        
+        draw.RoundedBox(12, 0, 0, w, h, Color(0, 0, 0, 150))
+        draw.RoundedBox(12, 0, 0, w, h, Color(255, 50, 50, 30 + redHover * 40))
+        
+        surface.SetDrawColor(255, 50, 50, 100 + redHover * 155)
+        surface.DrawOutlinedRect(0, 0, w, h, 3)
+        
+        draw.SimpleText("RED TEAM", "DermaLarge", w/2, h/2, Color(255, 255, 255, 200 + redHover * 55), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    end
+
+    blueTeam.DoClick = function()
+        net.Start("TDM_TeamSelect")
+        net.WriteString("blue")
+        net.SendToServer()
+        TeamSelectionMenu:AlphaTo(0, 0.3, 0, function()
+            TeamSelectionMenu:Remove()
+        end)
+    end
+
+    redTeam.DoClick = function()
+        net.Start("TDM_TeamSelect")
+        net.WriteString("red")
+        net.SendToServer()
+        TeamSelectionMenu:AlphaTo(0, 0.3, 0, function()
+            TeamSelectionMenu:Remove()
+        end)
+    end
+
+    TeamSelectionMenu.Think = function(self)
+        if input.IsKeyDown(KEY_ESCAPE) then
+            self:AlphaTo(0, 0.3, 0, function()
+                self:Remove()
+            end)
+        end
+    end
+end
+
+net.Receive("TDM_PlayerTeamMenu", function()
+    CreateTeamMenu()
+end)

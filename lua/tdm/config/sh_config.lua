@@ -9,7 +9,7 @@ TDM.Config = {
             name = "Red Team",
             color = Color(255, 0, 0),
             model = "models/player/breen.mdl",
-            weapons = {"m9k_model3russian", "m9k_ump45", "csgo_karambit_crimsonwebs", "m9k_model500", "m9k_winchester73"},
+            weapons = {"m9k_m16a4_acog", "m9k_m416", "csgo_karambit_crimsonwebs", "m9k_scar", "m9k_m14sp", "m9k_minigun", "m9k_glock",  "m9k_sig_p229r", "m9k_coltpython", "m9k_deagle", "m9k_hk45", "m9k_remington870", "m9k_dbarrel", "m9k_aw50", "m9k_m24", "m9k_mp9", "m9k_honeybadger", "m9k_thompson", "weapon_crowbar",  "m9k_ak47"},
             ammo = {
                 m9k_ak47 = 100
             },
@@ -23,7 +23,7 @@ TDM.Config = {
             name = "Blue Team",
             color = Color(0, 0, 255),
             model = "models/player/kleiner.mdl",
-            weapons = {"m9k_model3russian", "m9k_ump45", "csgo_karambit_crimsonwebs", "m9k_model500", "m9k_winchester73"},
+            weapons = {"m9k_m16a4_acog", "m9k_m416", "csgo_karambit_crimsonwebs", "m9k_scar", "m9k_m14sp", "m9k_minigun", "m9k_glock",  "m9k_sig_p229r", "m9k_coltpython", "m9k_deagle", "m9k_hk45", "m9k_remington870", "m9k_dbarrel", "m9k_aw50", "m9k_m24", "m9k_mp9", "m9k_honeybadger", "m9k_thompson", "weapon_crowbar",  "m9k_ak47"},
             ammo = {
                 tfa_mossberg590 = 140
             },
